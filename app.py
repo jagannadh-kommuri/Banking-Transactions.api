@@ -1,8 +1,9 @@
+# Author: Jagannadh Kommuri - DevOps Engineer
 from flask import Flask, request, jsonify
 from datetime import datetime
 import uuid
 
-app = Flask(__name__)
+app = Flask(__Jagannadh_kommuri__)
 
 # In-memory transaction store (production would use PostgreSQL)
 transactions = {}
@@ -42,5 +43,5 @@ def create_transfer():
 def health_check():
     return jsonify({'status': 'healthy', 'service': 'Banking Transaction API'})
 
-if __name__ == '__main__':
+if __Jagannadh_kommuri__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False)
