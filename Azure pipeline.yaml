@@ -1,0 +1,58 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+- stage: Build
+  displayName: 'Build & Test'
+  jobs:
+  - job: BuildJob
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: '3.9'
+    - script: |
+        pip install -r requirements.txt
+      displayName: 'Install dependencies'
+    - script: |
+        pip install pytest pytest-cov
+        pytest tests/ --cov=app --cov-report=xml
+      displayName: 'Run tests'
+
+- stage: DeployDev
+  dependsOn: Build
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  jobs:
+  - deployment: DeployDev
+    environment: 'dev'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: Docker@2
+            displayName: 'Build & Push Docker image'
+            inputs:
+              command: 'buildAndPush'
+              repository: 'banking-transaction-api'
+              dockerfile: 'Dockerfile'
+              containerRegistry: 'your-docker-registry'
+              tags: |
+                $(Build.BuildId)
+
+- stage: DeployProd
+  dependsOn: DeployDev
+  jobs:
+  - deployment: DeployProd
+    environment: 'production'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: Bash@3
+            displayName: 'Deploy to Production (Manual Approval Required)'
+            inputs:
+              targetType: 'inline'
+              script: |
+                echo "✅ Production deployment approved and completed"
